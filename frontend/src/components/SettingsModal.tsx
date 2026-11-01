@@ -89,34 +89,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     const cleanEmail = email.trim();
 
     if (!cleanUsername) {
-      setErrorMessage('Username tidak boleh kosong');
+      setErrorMessage('Username cannot be empty');
       return;
     }
     if (cleanUsername.length < 3) {
-      setErrorMessage('Username minimal 3 karakter');
+      setErrorMessage('Username must be at least 3 characters');
       return;
     }
     if (!/^[a-zA-Z0-9._-]+$/.test(cleanUsername)) {
-      setErrorMessage('Username hanya boleh berisi huruf, angka, titik, underscore, dan strip');
+      setErrorMessage('Username may only contain letters, numbers, dots, underscores, and hyphens');
       return;
     }
 
     if (!cleanEmail || !cleanEmail.includes('@')) {
-      setErrorMessage('Email SSO tidak valid');
+      setErrorMessage('Invalid SSO email');
       return;
     }
 
     if (newPassword) {
       if (newPassword.length < 8) {
-        setErrorMessage('Kata sandi baru minimal 8 karakter');
+        setErrorMessage('New password must be at least 8 characters');
         return;
       }
       if (newPassword !== confirmPassword) {
-        setErrorMessage('Konfirmasi kata sandi baru tidak cocok');
+        setErrorMessage('New password confirmation does not match');
         return;
       }
       if (!currentPassword) {
-        setErrorMessage('Masukkan kata sandi saat ini untuk memverifikasi perubahan kata sandi');
+        setErrorMessage('Enter your current password to verify the password change');
         return;
       }
     }
@@ -132,10 +132,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       });
 
       onUpdateSuccess(res.user);
-      onShowToast('Pengaturan akun & SSO berhasil diperbarui', 'success');
+      onShowToast('Account & SSO settings updated successfully', 'success');
       onClose();
     } catch (err: any) {
-      setErrorMessage(err.message || 'Gagal memperbarui profil');
+      setErrorMessage(err.message || 'Failed to update profile');
     } finally {
       setIsSaving(false);
     }
@@ -152,10 +152,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
             <div>
               <h2 className="text-sm font-semibold text-zinc-100 tracking-tight">
-                Pengaturan Akun & SSO
+                Account & SSO Settings
               </h2>
               <p className="text-[11px] text-zinc-400 font-mono">
-                Kelola kredensial SSO Forward Auth & OIDC
+                Manage SSO Forward Auth & OIDC credentials
               </p>
             </div>
           </div>
@@ -242,7 +242,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             <div>
               <label className="block text-xs font-medium text-zinc-300 mb-1.5">
-                Display Name (Nama Lengkap)
+                Display Name (Full Name)
               </label>
               <input
                 type="text"
@@ -263,7 +263,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <div className="flex items-center gap-2">
                 <Lock className="w-4 h-4 text-zinc-400" />
                 <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider font-mono">
-                  Ganti Kata Sandi
+                  Change Password
                 </h3>
               </div>
               <button
@@ -272,7 +272,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 className="flex items-center gap-1 text-[11px] font-mono text-zinc-400 hover:text-white transition-colors"
               >
                 <Sparkles className="w-3 h-3 text-amber-400" />
-                <span>{showPassGenerator ? 'Tutup Generator' : 'Generate Sandi Kuat'}</span>
+                <span>{showPassGenerator ? 'Close Generator' : 'Generate Strong Password'}</span>
               </button>
             </div>
 
@@ -291,14 +291,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             <div>
               <label className="block text-xs font-medium text-zinc-300 mb-1.5">
-                Kata Sandi Saat Ini
+                Current Password
               </label>
               <div className="relative">
                 <input
                   type={showCurrentPass ? 'text' : 'password'}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Diperlukan jika ingin mengubah kata sandi"
+                  placeholder="Required if you want to change the password"
                   className="w-full pl-3 pr-9 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-xs font-mono text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-colors"
                 />
                 <button
@@ -314,14 +314,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
                 <label className="block text-xs font-medium text-zinc-300 mb-1.5">
-                  Kata Sandi Baru
+                  New Password
                 </label>
                 <div className="relative">
                   <input
                     type={showNewPass ? 'text' : 'password'}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Minimal 8 karakter"
+                    placeholder="Minimum 8 characters"
                     className="w-full pl-3 pr-9 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-xs font-mono text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-colors"
                   />
                   <button
@@ -341,7 +341,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       />
                     </div>
                     <div className="flex justify-between text-[10px] font-mono text-zinc-500">
-                      <span>Kekuatan: {strength.label}</span>
+                      <span>Strength: {strength.label}</span>
                       <span>{newPassword.length} chars</span>
                     </div>
                   </div>
@@ -350,14 +350,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
               <div>
                 <label className="block text-xs font-medium text-zinc-300 mb-1.5">
-                  Konfirmasi Kata Sandi Baru
+                  Confirm New Password
                 </label>
                 <div className="relative">
                   <input
                     type={showConfirmPass ? 'text' : 'password'}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Ulangi kata sandi baru"
+                    placeholder="Repeat the new password"
                     className="w-full pl-3 pr-9 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-xs font-mono text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-colors"
                   />
                   <button
@@ -379,14 +379,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         <Check className="w-3 h-3" /> Cocok
                       </>
                     ) : (
-                      'Kata sandi tidak cocok'
+                      'Passwords do not match'
                     )}
                   </p>
                 )}
               </div>
             </div>
             <p className="text-[10px] text-zinc-500 italic">
-              * Biarkan kolom kata sandi kosong jika hanya ingin memperbarui username, email, atau display name.
+              * Leave the password fields empty if you only want to update your username, email, or display name.
             </p>
           </div>
 
@@ -397,7 +397,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 transition-colors"
             >
-              Batal
+              Cancel
             </button>
             <button
               type="submit"
@@ -407,12 +407,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               {isSaving ? (
                 <>
                   <div className="w-3 h-3 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin" />
-                  <span>Menyimpan...</span>
+                  <span>Saving...</span>
                 </>
               ) : (
                 <>
                   <KeyRound className="w-3.5 h-3.5" />
-                  <span>Simpan Perubahan</span>
+                  <span>Save Changes</span>
                 </>
               )}
             </button>

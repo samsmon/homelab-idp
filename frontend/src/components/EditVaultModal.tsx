@@ -85,7 +85,7 @@ export const EditVaultModal: React.FC<EditVaultModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!serviceName.trim() || !username.trim() || !password.trim()) {
-      setError('Nama Service, Username, dan Password wajib diisi.');
+      setError('Service Name, Username, and Password are required.');
       return;
     }
 
@@ -102,7 +102,7 @@ export const EditVaultModal: React.FC<EditVaultModalProps> = ({
       });
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Gagal memperbarui kredensial');
+      setError(err.message || 'Failed to update credentials');
     } finally {
       setIsSaving(false);
     }
@@ -121,21 +121,21 @@ export const EditVaultModal: React.FC<EditVaultModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-semibold text-white font-sans">
-                  Edit Kredensial: <span className="font-mono text-zinc-300">{item.service_name}</span>
+                  Edit Credential: <span className="font-mono text-zinc-300">{item.service_name}</span>
                 </h3>
                 <span className="px-2 py-0.5 rounded text-[10px] bg-zinc-800 text-zinc-300 border border-zinc-700">
                   {item.category}
                 </span>
               </div>
               <p className="text-[11px] text-zinc-400 mt-0.5">
-                Ubah Kata Sandi, URL, dan Catatan (Tersimpan aman dengan enkripsi AES-256-GCM)
+                Change Password, URL, and Notes (stored securely with AES-256-GCM encryption)
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="p-1 rounded text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
-            title="Tutup"
+            title="Close"
           >
             <X className="w-4 h-4" />
           </button>
@@ -154,7 +154,7 @@ export const EditVaultModal: React.FC<EditVaultModalProps> = ({
             <div className="flex items-center justify-between">
               <label className="text-zinc-200 font-semibold flex items-center gap-1.5 text-xs">
                 <Lock className="w-3.5 h-3.5 text-white" />
-                <span>Password / Kata Sandi *</span>
+                <span>Password *</span>
               </label>
               <div className="flex items-center gap-2">
                 <button
@@ -163,7 +163,7 @@ export const EditVaultModal: React.FC<EditVaultModalProps> = ({
                   className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1 transition-colors px-2 py-0.5 rounded hover:bg-zinc-800 border border-transparent hover:border-zinc-700"
                 >
                   <Sparkles className="w-3 h-3 text-amber-400" />
-                  <span>{showGenerator ? 'Tutup Generator' : 'Generate Acak'}</span>
+                  <span>{showGenerator ? 'Close Generator' : 'Generate Random'}</span>
                 </button>
               </div>
             </div>
@@ -173,7 +173,7 @@ export const EditVaultModal: React.FC<EditVaultModalProps> = ({
                 ref={passwordInputRef}
                 type={showPass ? 'text' : 'password'}
                 required
-                placeholder="Masukkan kata sandi baru"
+                placeholder="Enter a new password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-white transition-colors pr-24 text-xs font-mono"
@@ -183,7 +183,7 @@ export const EditVaultModal: React.FC<EditVaultModalProps> = ({
                   type="button"
                   onClick={handleCopyPassword}
                   className="p-1 rounded text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
-                  title="Salin Kata Sandi"
+                  title="Copy Password"
                 >
                   {copiedPass ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                 </button>
@@ -191,7 +191,7 @@ export const EditVaultModal: React.FC<EditVaultModalProps> = ({
                   type="button"
                   onClick={() => setShowPass(!showPass)}
                   className="p-1 rounded text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
-                  title={showPass ? 'Sembunyikan' : 'Tampilkan'}
+                  title={showPass ? 'Hide' : 'Show'}
                 >
                   {showPass ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                 </button>
@@ -218,7 +218,7 @@ export const EditVaultModal: React.FC<EditVaultModalProps> = ({
               <div className="flex items-center justify-between mb-1">
                 <label className="text-zinc-300 flex items-center gap-1.5">
                   <Globe className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>Service URL / Host Web</span>
+                  <span>Service URL / Web Host</span>
                 </label>
                 {serviceUrl && (
                   <a
@@ -227,7 +227,7 @@ export const EditVaultModal: React.FC<EditVaultModalProps> = ({
                     rel="noreferrer"
                     className="text-[10px] text-zinc-400 hover:text-white inline-flex items-center gap-1"
                   >
-                    <span>Buka Link</span>
+                    <span>Open Link</span>
                     <ExternalLink className="w-2.5 h-2.5" />
                   </a>
                 )}
@@ -235,7 +235,7 @@ export const EditVaultModal: React.FC<EditVaultModalProps> = ({
               <input
                 ref={urlInputRef}
                 type="text"
-                placeholder="https://cloud.homelab.local atau http://192.168.1.50:8080"
+                placeholder="https://cloud.homelab.local or http://192.168.1.50:8080"
                 value={serviceUrl}
                 onChange={(e) => setServiceUrl(e.target.value)}
                 className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
@@ -246,12 +246,12 @@ export const EditVaultModal: React.FC<EditVaultModalProps> = ({
             <div>
               <label className="block text-zinc-300 mb-1 flex items-center gap-1.5">
                 <FileText className="w-3.5 h-3.5 text-zinc-400" />
-                <span>Catatan / API Token / Recovery Key (Terenkripsi)</span>
+                <span>Notes / API Token / Recovery Key (Encrypted)</span>
               </label>
               <textarea
                 ref={notesInputRef}
                 rows={3}
-                placeholder="Contoh: Token API, Port SSH, Recovery seed, atau catatan konfigurasi khusus..."
+                placeholder="Example: API token, SSH port, recovery seed, or custom configuration notes..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
@@ -262,11 +262,11 @@ export const EditVaultModal: React.FC<EditVaultModalProps> = ({
           {/* Section 3: METADATA (Service Name, Username, Category) */}
           <div className="pt-2 border-t border-zinc-800/80">
             <span className="text-[10px] uppercase tracking-wider text-zinc-400 block mb-2 font-semibold">
-              Detail Akun & Kategori
+              Account Details & Category
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="sm:col-span-1">
-                <label className="block text-zinc-400 mb-1 text-[11px]">Nama Layanan *</label>
+                <label className="block text-zinc-400 mb-1 text-[11px]">Service Name *</label>
                 <input
                   type="text"
                   required
@@ -277,7 +277,7 @@ export const EditVaultModal: React.FC<EditVaultModalProps> = ({
               </div>
 
               <div className="sm:col-span-1">
-                <label className="block text-zinc-400 mb-1 text-[11px]">Username / Akun *</label>
+                <label className="block text-zinc-400 mb-1 text-[11px]">Username / Account *</label>
                 <input
                   type="text"
                   required
@@ -288,7 +288,7 @@ export const EditVaultModal: React.FC<EditVaultModalProps> = ({
               </div>
 
               <div className="sm:col-span-1">
-                <label className="block text-zinc-400 mb-1 text-[11px]">Kategori</label>
+                <label className="block text-zinc-400 mb-1 text-[11px]">Category</label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
@@ -316,7 +316,7 @@ export const EditVaultModal: React.FC<EditVaultModalProps> = ({
                 disabled={isSaving}
                 className="px-3.5 py-1.5 rounded text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors border border-zinc-700 font-medium"
               >
-                Batal
+                Cancel
               </button>
               <button
                 type="submit"
@@ -326,10 +326,10 @@ export const EditVaultModal: React.FC<EditVaultModalProps> = ({
                 {isSaving ? (
                   <>
                     <span className="w-3 h-3 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                    <span>Menyimpan...</span>
+                    <span>Saving...</span>
                   </>
                 ) : (
-                  <span>Simpan Perubahan</span>
+                  <span>Save Changes</span>
                 )}
               </button>
             </div>
