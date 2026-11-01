@@ -109,7 +109,7 @@ export const VaultDashboard: React.FC<VaultDashboardProps> = ({
   };
 
   const handleDelete = async (item: VaultItem) => {
-    if (!confirm(`Hapus kredensial '${item.service_name}' dari vault?`)) {
+    if (!confirm(`Delete credential '${item.service_name}' from the vault?`)) {
       return;
     }
 
@@ -159,7 +159,7 @@ export const VaultDashboard: React.FC<VaultDashboardProps> = ({
             Vault Credentials
           </h1>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Terenkripsi AES-256-GCM. Edit Password, URL, & Catatan langsung dari UI.
+            AES-256-GCM encrypted. Edit Password, URL, & Notes directly from the UI.
           </p>
         </div>
 
@@ -182,7 +182,7 @@ export const VaultDashboard: React.FC<VaultDashboardProps> = ({
           <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
-            placeholder="Cari kredensial (service, username, url, notes)..."
+            placeholder="Search credentials (service, username, url, notes)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-8 pr-4 py-1.5 bg-zinc-900/80 border border-zinc-800 rounded-md text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors font-mono"
@@ -372,10 +372,10 @@ export const VaultDashboard: React.FC<VaultDashboardProps> = ({
                       <button
                         onClick={() => openEditModal(item, 'password')}
                         className="text-[10px] text-zinc-400 hover:text-white flex items-center gap-1 transition-colors"
-                        title="Ubah Password"
+                        title="Change Password"
                       >
                         <Pencil className="w-2.5 h-2.5" />
-                        <span>Ubah</span>
+                        <span>Change</span>
                       </button>
                     </div>
                     <div className="flex items-center justify-between bg-zinc-950 px-2.5 py-1 rounded border border-zinc-800">
@@ -413,7 +413,7 @@ export const VaultDashboard: React.FC<VaultDashboardProps> = ({
                         <button
                           onClick={() => openEditModal(item, 'notes')}
                           className="text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors"
-                          title="Edit Catatan"
+                          title="Edit Notes"
                         >
                           Edit
                         </button>
@@ -429,7 +429,7 @@ export const VaultDashboard: React.FC<VaultDashboardProps> = ({
                         className="text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors inline-flex items-center gap-1"
                       >
                         <Plus className="w-2.5 h-2.5" />
-                        <span>Tambah Catatan</span>
+                        <span>Add Notes</span>
                       </button>
                     </div>
                   )}
@@ -451,7 +451,7 @@ export const VaultDashboard: React.FC<VaultDashboardProps> = ({
                     <button
                       onClick={() => handleDelete(item)}
                       className="px-2 py-1 rounded text-zinc-400 hover:text-red-300 hover:bg-red-950/30 transition-colors flex items-center gap-1 text-xs"
-                      title="Hapus Kredensial"
+                      title="Delete Credential"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -552,7 +552,7 @@ export const VaultDashboard: React.FC<VaultDashboardProps> = ({
                           <button
                             onClick={() => openEditModal(item, 'password')}
                             className="text-zinc-400 hover:text-white ml-1 p-0.5"
-                            title="Ubah Password"
+                            title="Change Password"
                           >
                             <Pencil className="w-3 h-3" />
                           </button>
@@ -566,7 +566,7 @@ export const VaultDashboard: React.FC<VaultDashboardProps> = ({
                             <button
                               onClick={() => openEditModal(item, 'notes')}
                               className="text-zinc-500 hover:text-zinc-300 opacity-0 group-hover:opacity-100"
-                              title="Edit Catatan"
+                              title="Edit Notes"
                             >
                               <Pencil className="w-2.5 h-2.5" />
                             </button>
@@ -576,7 +576,7 @@ export const VaultDashboard: React.FC<VaultDashboardProps> = ({
                             onClick={() => openEditModal(item, 'notes')}
                             className="text-[11px] text-zinc-500 hover:text-zinc-400 italic"
                           >
-                            + catatan
+                            + notes
                           </button>
                         )}
                       </td>
@@ -586,7 +586,7 @@ export const VaultDashboard: React.FC<VaultDashboardProps> = ({
                           <button
                             onClick={() => openEditModal(item, 'all')}
                             className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 transition-colors flex items-center gap-1 text-[11px]"
-                            title="Edit Kredensial"
+                            title="Edit Credential"
                           >
                             <Edit2 className="w-3 h-3" />
                             <span>Edit</span>
@@ -594,7 +594,7 @@ export const VaultDashboard: React.FC<VaultDashboardProps> = ({
                           <button
                             onClick={() => handleDelete(item)}
                             className="p-1 rounded text-zinc-400 hover:text-red-300 hover:bg-red-950/30 transition-colors"
-                            title="Hapus"
+                            title="Delete"
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>
