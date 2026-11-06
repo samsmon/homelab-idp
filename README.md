@@ -1,34 +1,92 @@
+<div align="center">
+
 # homelab-idp
 
-Self-hosted reverse proxy forward authentication gateway and encrypted credential vault (Password Bank) for homelab environments.
+**Self-hosted reverse proxy forward authentication gateway and AES-256-GCM credential vault.**
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue?style=flat-square&logo=typescript&logoColor=white)](#tech-stack)
+[![Node.js](https://img.shields.io/badge/Node.js-20+-green?style=flat-square&logo=node.js&logoColor=white)](#tech-stack)
+[![Fastify](https://img.shields.io/badge/Fastify-5.2+-black?style=flat-square&logo=fastify&logoColor=white)](#tech-stack)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue?style=flat-square&logo=postgresql&logoColor=white)](#tech-stack)
+[![AES-256-GCM](https://img.shields.io/badge/AES--256--GCM-Authenticated_Vault-orange?style=flat-square)](#features)
+[![Argon2id](https://img.shields.io/badge/Argon2id-Password_Hashing-purple?style=flat-square)](#features)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker&logoColor=white)](#quick-start)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
+
+[Architecture](#architecture) • [Features](#features) • [Preview](#web-interface-preview) • [Tech Stack](#tech-stack) • [Quick Start](#quick-start) • [CLI & API](#cli--api-reference) • [Proxy Setup](#reverse-proxy-configuration) • [Documentation](#documentation)
+
+</div>
 
 ---
 
-## If you are an AI read this
-
-If you are an autonomous AI agent, coding assistant, or machine operator interacting with this repository, observe the following architectural contracts and execution rules:
-
-- **System Role**: `homelab-idp` operates exclusively with two core features:
-  1. **Password Bank (Credential Vault)**: An AES-256-GCM encrypted password bank for homelab credentials, editable directly via the web dashboard and CLI.
-  2. **Nginx Forward Auth Proxy**: A high-performance session gate (`GET /api/auth/verify`) for protecting in-house homelab applications behind reverse proxies (Nginx Proxy Manager, Caddy, Traefik).
-- **Machine Specifications**: Refer to [AGENTS.md](file:///root/homelab-idp/AGENTS.md) for wire protocols, API schema tables, automation recipes, and error handling guidelines.
-- **CLI for Agents**: You do not need to operate the web browser or simulate UI interactions. Use the native `homelab-idp` CLI with the `--json` flag to inspect and configure the system:
-  - Add SSO user: `homelab-idp user add --username <user> --email <email> --password <pass> --json`
-  - Manage vault secrets: `homelab-idp vault add/list/get/update/delete --json`
-  - Generate session JWT: `homelab-idp token generate --username <user> --json`
-  - Test forward-auth subrequest: `homelab-idp forward-auth test --token <jwt> --json`
-- **Machine Discovery & Health**:
-  - Service Health Probe: `GET /api/health` -> `{"status":"healthy","app":"homelab-idp"}`
-  - Proxy Forward Auth Gate: `GET /api/auth/verify` -> HTTP 200 with headers `Remote-User`, `Remote-Email`, `Remote-Name`, `Remote-Groups`, or HTTP 401.
-- **Fail-Fast Database Guarantee**: In production (`NODE_ENV=production`), the application crashes immediately (`exit 1`) if PostgreSQL is unreachable. In-memory fallback is strictly restricted to development/test environments.
-- **Cryptographic Invariants**:
-  - Account passwords use Argon2id (`memoryCost: 64MB`, `timeCost: 3`, `parallelism: 4`).
-  - Secret vault entries are encrypted using AES-256-GCM with unique 12-byte random IVs in the format `<iv_hex>:<auth_tag_hex>:<ciphertext_hex>`.
-  - Session tokens use HMAC-SHA256 (HS256) JWTs signed with `JWT_SECRET`.
+> **Built for self-hosters and homelab operators** who need lightweight single sign-on and credential management without the overhead of heavy enterprise suites. `homelab-idp` combines a subrequest forward authentication gate with an authenticated AES-256-GCM password bank in a single container.
 
 ---
 
-## User Interface
+## Architecture
+
+```mermaid
+flowchart TD
+    subgraph Edge[" Edge & Ingress Layer "]
+        Browser["User Browser<br/>(Web Dashboard / Protected Apps)"]
+        Proxy["Reverse Proxy Gate<br/>(Nginx / Traefik / Caddy)"]
+        CLI["Terminal / Automation<br/>(homelab-idp CLI --json)"]
+    end
+
+    subgraph Core[" homelab-idp Engine "]
+        AuthGate["Forward Auth Verifier<br/>(GET /api/auth/verify)"]
+        SessionMgr["Session & Identity Core<br/>(Argon2id & HS256 JWT)"]
+        VaultEngine["Credential Vault<br/>(AES-256-GCM Envelope)"]
+    end
+
+    subgraph Target[" Upstream & Persistence "]
+        Upstream["Protected Homelab Service<br/>(Receives Remote-* Headers)"]
+        DB[("PostgreSQL Database<br/>(Fail-Fast Guarantee)")]
+    end
+
+    Browser -->|1. Request Access| Proxy
+    Proxy -->|2. Subrequest verify| AuthGate
+    AuthGate -->|3. Validate Session| SessionMgr
+    SessionMgr --> DB
+    AuthGate --"4. 200 OK + Remote-* Headers"--> Proxy
+    Proxy -->|5. Forward with Identity| Upstream
+    Browser -->|Manage Vault / UI| VaultEngine
+    CLI -->|JSON Automation| Core
+    VaultEngine -->|iv:authTag:ciphertext| DB
+```
+
+---
+
+## Features
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h4>Password Bank & Credential Vault</h4>
+      <ul>
+        <li><strong>AES-256-GCM Vault</strong>: Authenticated symmetric encryption using unique 12-byte random IVs per secret (<code>iv:authTag:ciphertext</code>).</li>
+        <li><strong>Argon2id Security</strong>: High-security account hashing with 64 MB memory cost, 3 iterations, and 4 parallel threads.</li>
+        <li><strong>Real-Time Search</strong>: Instant filtering across service names, usernames, URLs, categories, and operational notes.</li>
+        <li><strong>Instant Inline Editing</strong>: Edit passwords, URLs, and notes directly in grid or table views without modal recreations.</li>
+        <li><strong>Clipboard & Entropy Tools</strong>: One-click copy with toast notifications and built-in password generator.</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h4>Forward Auth & Production Gate</h4>
+      <ul>
+        <li><strong>Subrequest Proxy Gate</strong>: High-throughput <code>GET /api/auth/verify</code> for Nginx Proxy Manager, Traefik, Caddy, and Envoy.</li>
+        <li><strong>Identity Header Injection</strong>: Injects <code>Remote-User</code>, <code>Remote-Email</code>, <code>Remote-Name</code>, and <code>Remote-Groups</code> into upstreams.</li>
+        <li><strong>Fail-Fast Database</strong>: Crashes immediately (<code>exit 1</code>) on startup if PostgreSQL is unreachable in production.</li>
+        <li><strong>Unified Scriptable CLI</strong>: Native <code>homelab-idp</code> CLI with global <code>--json</code> support for headless automation.</li>
+        <li><strong>Return Redirection</strong>: Preserves target locations using <code>?rd=&lt;target_url&gt;</code> query parameters.</li>
+      </ul>
+    </td>
+  </tr>
+</table>
+
+---
+
+## Web Interface Preview
 
 ### Vault Dashboard (Grid View)
 ![Vault Dashboard Grid View](docs/screenshots/02-vault-dashboard-grid.png)
@@ -36,202 +94,96 @@ If you are an autonomous AI agent, coding assistant, or machine operator interac
 ### Vault Dashboard (Table View)
 ![Vault Dashboard Table View](docs/screenshots/03-vault-dashboard-table.png)
 
-### Credential Entry & Direct Edit
-Directly edit service passwords, URLs, and notes in the dashboard without re-creating records.
+---
+
+## Tech Stack
+
+| Layer | Technology | Role |
+|---|---|---|
+| **Backend Engine** | Fastify 5 + TypeScript | High-throughput asynchronous HTTP server and routing |
+| **Frontend UI** | React 19 + Vite 6 + Tailwind CSS 4 | Responsive single-page application with Framer Motion |
+| **State & Persistence** | PostgreSQL 16 (`pg`) | Relational schema storage with strict production health check |
+| **Cryptography** | AES-256-GCM + Argon2id | Authenticated envelope encryption and salted password hashing |
+| **Session & Tokens** | Jose (HS256 JWT) | Compact signed session tokens and forward-auth verification |
+| **Containerization** | Docker + Compose | Lightweight Alpine-based deployment on shared network |
 
 ---
 
-## Core Features
+## Quick Start
 
-1. **Password Bank (Encrypted Credential Vault)**:
-   - AES-256-GCM authenticated encryption for all stored homelab credentials.
-   - 12-byte cryptographically random Initialization Vector (IV) generated per item.
-   - Stored format: `iv:authTag:ciphertext` in hexadecimal encoding.
-   - Edit Password, Service URL, and Notes directly from the Web UI or via the CLI.
-   - Real-time instant search across service names, usernames, URLs, categories, and notes.
-   - One-click clipboard copy for usernames and passwords with toast confirmation.
-   - Masked password toggle and built-in entropy password generator.
+### Prerequisites
+- Docker Engine 24+ and Docker Compose v2 (or Node.js 20+ for host execution)
+- Shared Docker network (e.g. `shared_net`) or local PostgreSQL instance
 
-2. **Nginx Forward Auth Proxy (SSO Gateway)**:
-   - High-throughput subrequest verification endpoint at `GET /api/auth/verify`.
-   - Injects verified identity headers to protected upstream services:
-     - `Remote-User: <username>`
-     - `Remote-Email: <email>`
-     - `Remote-Name: <display_name>`
-     - `Remote-Groups: <role>`
-   - Compatible with Nginx Proxy Manager, Traefik, Caddy, and Envoy.
-   - Seamless redirection to login page with `?rd=<original_url>` return parameter.
-
-3. **Production Fail-Fast Architecture**:
-   - Explicit database health check during startup.
-   - Fails fast (`exit 1`) in production if `DATABASE_URL` is unreachable or misconfigured, preventing accidental data masking or silent fallback.
-
-4. **Command-Line Interface (CLI)**:
-   - Human-friendly and machine-readable CLI tool (`homelab-idp`).
-   - Supports user accounts, credential vault CRUD with automatic service name to UUID resolution, and session token generation.
-   - Global `--json` flag across all commands for script and AI agent integration.
-
----
-
-## Command-Line Management (CLI)
-
-`homelab-idp` includes a built-in CLI utility for managing SSO users and encrypted vault entries directly from your terminal or shell scripts.
-
-### Running the CLI
-
-- **From repository root**:
-  ```bash
-  ./bin/homelab-idp <command> [options]
-  # Or via npm
-  npm run cli -- <command> [options]
-  ```
-- **From inside Docker container**:
-  ```bash
-  docker compose exec homelab-idp homelab-idp <command> [options]
-  ```
-
----
-
-### 1. User and SSO Management
-
-#### Register an SSO User
-```bash
-# Human readable
-./bin/homelab-idp user add --username alice --email alice@homelab.local --password "SecretPassword123!" --name "Alice" --role member
-
-# Output as JSON (for AI agents or scripts)
-./bin/homelab-idp user add --username alice --email alice@homelab.local --password "SecretPassword123!" --json
-```
-
-#### List Registered Users
-```bash
-./bin/homelab-idp user list
-./bin/homelab-idp user list --json
-```
-
-#### Update User Profile or Password
-```bash
-# Update password
-./bin/homelab-idp user passwd alice --password "NewSecurePassword2026!"
-
-# Update profile details
-./bin/homelab-idp user update alice --email alice.new@homelab.local --display-name "Alice Smith"
-```
-
-#### Delete User
-```bash
-./bin/homelab-idp user delete alice
-```
-
----
-
-### 2. Credential Vault Management
-
-#### Add a Credential to the Vault
-```bash
-./bin/homelab-idp vault add \
-  --service "Proxmox Cluster" \
-  --username "root@pam" \
-  --password "ClusterRootP@ssword2026" \
-  --url "https://192.168.1.100:8006" \
-  --category "Infrastructure" \
-  --notes "Cluster master node"
-```
-
-#### List Vault Credentials
-```bash
-# List with passwords masked
-./bin/homelab-idp vault list
-
-# List with passwords decrypted
-./bin/homelab-idp vault list --reveal
-
-# Search credentials and output JSON
-./bin/homelab-idp vault list --query "proxmox" --reveal --json
-```
-
-#### Inspect / Retrieve a Credential by Name or UUID
-```bash
-./bin/homelab-idp vault get "Proxmox Cluster" --reveal
-./bin/homelab-idp vault get "Proxmox Cluster" --reveal --json
-```
-
-#### Update a Credential by Name or UUID
-You do not need to look up the UUID manually. The CLI automatically resolves service names:
-```bash
-./bin/homelab-idp vault update "Proxmox Cluster" --password "NewPvePassword2026!"
-```
-
-#### Delete a Credential by Name or UUID
-```bash
-./bin/homelab-idp vault delete "Proxmox Cluster"
-```
-
----
-
-### 3. Direct Token Generation and Testing
-
-#### Generate a Session / Forward-Auth JWT Token
-Generate a signed token for automated scripts without completing a browser login:
-```bash
-./bin/homelab-idp token generate --username admin --hours 24 --json
-```
-
-#### Test Forward Authentication with a Token
-Simulate a reverse proxy subrequest to verify token headers:
-```bash
-./bin/homelab-idp forward-auth test --token "<jwt_token>"
-```
-
----
-
-## Quick Start (Docker Deployment)
-
-### 1. Copy Environment Configuration
+### Container Deployment (Recommended)
 
 ```bash
+# 1. Clone the repository and configure environment variables
+git clone https://github.com/username/homelab-idp.git
+cd homelab-idp
 cp .env.example .env
+
+# 2. Ensure shared network exists and build containers
+docker network create shared_net || true
+docker compose up -d --build
+
+# 3. Confirm health status
+curl -s http://localhost:8300/api/health
 ```
 
-Set the required secrets in `.env`:
-- `JWT_SECRET`: Random 64-character string for signing session tokens.
-- `VAULT_SECRET_KEY`: 32-byte secret key for AES-256-GCM vault encryption.
-- `DATABASE_URL`: Connection string to your PostgreSQL instance.
-- `INITIAL_ADMIN_USERNAME` and `INITIAL_ADMIN_PASSWORD`: Default administrator credentials.
+Default dashboard access: `http://<host-ip>:8300` (Default: `admin` / `change_this_master_password`).
 
-### 2. Launch with Docker Compose
-
-Ensure the shared Docker external network `homelab-net` exists:
+### Local Development
 
 ```bash
-docker network create homelab-net || true
-docker compose up -d --build
+# Install root dependencies and run backend/frontend concurrently
+npm install
+npm run dev:backend   # Fastify dev server with hot reload on :4000
+npm run dev:frontend  # Vite React dev server on :5173
 ```
-
-Access points:
-- Web Interface and Vault: `http://<server-ip>:8300/`
-- Forward Auth Verification: `http://<server-ip>:8300/api/auth/verify`
-
-Default credentials: `admin` / `change_this_master_password`
 
 ---
 
-## Forward Authentication Setup (Nginx Proxy Manager)
+## CLI & API Reference
 
-Protect in-house homelab applications by delegating authentication to `homelab-idp`.
+Manage users, tokens, and vault credentials via the native `homelab-idp` CLI:
 
-### Nginx Proxy Manager (NPM) Configuration
+```bash
+# User administration
+homelab-idp user add --username alice --email alice@homelab.local --password "SecretPass123!" --json
+homelab-idp user list --json
 
-1. Open your **Nginx Proxy Manager** administrative dashboard.
-2. Edit or add the **Proxy Host** for the application you want to protect.
-3. Go to the **Advanced** tab.
-4. Paste the following configuration snippet:
+# Credential vault management (resolves service names to UUIDs automatically)
+homelab-idp vault add --service "Proxmox" --username "root@pam" --password "PveRoot2026!" --category "Infra" --json
+homelab-idp vault list --query "proxmox" --reveal --json
+homelab-idp vault update "Proxmox" --password "NewPvePassword2026!" --json
+homelab-idp vault get "Proxmox" --reveal --json
+
+# Automated token generation & forward-auth verification test
+homelab-idp token generate --username admin --hours 24 --json
+homelab-idp forward-auth test --token "<jwt_token>" --json
+```
+
+### Core API Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|---|---|---|---|
+| `GET` | `/api/health` | Container readiness and health probe | None |
+| `POST` | `/api/auth/login` | Authenticate username/password and issue session cookie | None (Rate-limited) |
+| `GET` | `/api/auth/verify` | Forward authentication proxy subrequest gate | Cookie or Bearer |
+| `GET` | `/api/auth/me` | Retrieve profile and role for current session | Session / Bearer |
+| `GET` | `/api/vault` | Search and list credentials (supports `?q=query`) | Session / Bearer |
+| `POST` | `/api/vault` | Store newly encrypted credential record | Session / Bearer |
+| `PUT` | `/api/vault/:id` | Update credentials, category, notes, or URL | Session / Bearer |
+| `DELETE`| `/api/vault/:id` | Remove credential entry from vault | Session / Bearer |
+
+---
+
+## Reverse Proxy Configuration
+
+To protect homelab web applications, configure Nginx Proxy Manager (or Nginx) to query `homelab-idp`:
 
 ```nginx
-# ============================================================
-# Nginx Proxy Manager - Forward Auth via homelab-idp
-# ============================================================
-
 # 1. Forward Auth Verification Subrequest
 location /npm-auth-verify {
     internal;
@@ -251,18 +203,20 @@ location / {
     auth_request_set $remote_user $upstream_http_remote_user;
     auth_request_set $remote_email $upstream_http_remote_email;
     auth_request_set $remote_name $upstream_http_remote_name;
+    auth_request_set $remote_groups $upstream_http_remote_groups;
 
-    # Inject identity headers to downstream application
+    # Forward identity headers to protected upstream app
     proxy_set_header Remote-User $remote_user;
     proxy_set_header Remote-Email $remote_email;
     proxy_set_header Remote-Name $remote_name;
+    proxy_set_header Remote-Groups $remote_groups;
 
     # Redirect unauthenticated requests to login
     error_page 401 = @error401;
     proxy_pass $forward_scheme://$server:$port;
 }
 
-# 3. Redirect Handler
+# 3. Return Redirection Handler
 location @error401 {
     return 302 https://idp.yourdomain.com/login?rd=$scheme://$http_host$request_uri;
 }
@@ -270,6 +224,29 @@ location @error401 {
 
 ---
 
+## Troubleshooting & Operations
+
+| Symptom | Probable Cause | Immediate Remediation |
+|---|---|---|
+| Container exits immediately (`code 1`) | PostgreSQL unreachable in production | Verify `DATABASE_URL` connectivity and ensure database container is healthy. |
+| Forward auth returns `401 Unauthorized` | Missing cookie or invalid JWT token | Check browser cookie domain or generate fresh token via `homelab-idp token generate`. |
+| `429 Too Many Requests` on login | Rate limiter threshold exceeded (10/min) | Wait 60 seconds for cooldown window or execute operations via the native CLI. |
+| Vault secret decryption failure | `VAULT_SECRET_KEY` mismatch | Ensure `VAULT_SECRET_KEY` in `.env` matches the key used during credential creation. |
+
+---
+
+## Documentation
+
+Refer to repository resources for detailed automation specs and visual walkthroughs:
+
+| Document | Purpose | Target Audience |
+|---|---|---|
+| [Machine & API Specifications](AGENTS.md) | Wire protocols, CLI automation recipes, and error handling rules | Automation Agents & Devs |
+| [Web Interface Walkthrough](docs/screenshots/) | Visual guide covering login, vault views, and modal dialogs | Homelab Operators |
+| [Environment Definitions](.env.example) | Cryptographic secrets, database URL, and port configurations | SRE & System Admins |
+
+---
+
 ## License
 
-MIT License. Designed for secure, self-hosted homelab operations.
+Distributed under the [MIT License](LICENSE).
